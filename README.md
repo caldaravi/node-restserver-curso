@@ -1,0 +1,4 @@
+## Instalar modulos
+```
+npm install
+```
