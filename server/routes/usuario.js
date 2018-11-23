@@ -1,7 +1,6 @@
 const express = require('express');
 
 const bcrypt = require('bcrypt');
-
 const _ = require('underscore');
 
 const Usuario = require('../models/usuario');
@@ -9,7 +8,9 @@ const { verificaToken, verificaAdmin_Role } = require('../middlewares/autenticac
 
 const app = express();
 
+
 app.get('/usuario', verificaToken, (req, res) => {
+
 
     let desde = req.query.desde || 0;
     desde = Number(desde);
@@ -34,7 +35,7 @@ app.get('/usuario', verificaToken, (req, res) => {
                 res.json({
                     ok: true,
                     usuarios,
-                    total: conteo
+                    cuantos: conteo
                 });
 
             });
@@ -42,9 +43,10 @@ app.get('/usuario', verificaToken, (req, res) => {
 
         });
 
+
 });
 
-app.post('/usuario', [verificaToken, verificaAdmin_Role], (req, res) => {
+app.post('/usuario', [verificaToken, verificaAdmin_Role], function(req, res) {
 
     let body = req.body;
 
@@ -54,6 +56,7 @@ app.post('/usuario', [verificaToken, verificaAdmin_Role], (req, res) => {
         password: bcrypt.hashSync(body.password, 10),
         role: body.role
     });
+
 
     usuario.save((err, usuarioDB) => {
 
@@ -69,11 +72,13 @@ app.post('/usuario', [verificaToken, verificaAdmin_Role], (req, res) => {
             usuario: usuarioDB
         });
 
+
     });
+
 
 });
 
-app.put('/usuario/:id', [verificaToken, verificaAdmin_Role], (req, res) => {
+app.put('/usuario/:id', [verificaToken, verificaAdmin_Role], function(req, res) {
 
     let id = req.params.id;
     let body = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado']);
@@ -84,26 +89,31 @@ app.put('/usuario/:id', [verificaToken, verificaAdmin_Role], (req, res) => {
             return res.status(400).json({
                 ok: false,
                 err
-            })
+            });
         }
+
+
 
         res.json({
             ok: true,
             usuario: usuarioDB
         });
 
-    });
+    })
 
 });
 
-app.delete('/usuario/:id', [verificaToken, verificaAdmin_Role], (req, res) => {
+app.delete('/usuario/:id', [verificaToken, verificaAdmin_Role], function(req, res) {
+
 
     let id = req.params.id;
+
+    // Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {
+
     let cambiaEstado = {
         estado: false
-    }
+    };
 
-    //Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {
     Usuario.findByIdAndUpdate(id, cambiaEstado, { new: true }, (err, usuarioBorrado) => {
 
         if (err) {
@@ -111,7 +121,7 @@ app.delete('/usuario/:id', [verificaToken, verificaAdmin_Role], (req, res) => {
                 ok: false,
                 err
             });
-        }
+        };
 
         if (!usuarioBorrado) {
             return res.status(400).json({
@@ -129,6 +139,10 @@ app.delete('/usuario/:id', [verificaToken, verificaAdmin_Role], (req, res) => {
 
     });
 
+
+
 });
+
+
 
 module.exports = app;
