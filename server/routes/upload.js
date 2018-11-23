@@ -8,31 +8,34 @@ const Producto = require('../models/producto');
 const fs = require('fs');
 const path = require('path');
 
+
 // default options
 app.use(fileUpload());
+
 
 app.put('/upload/:tipo/:id', function(req, res) {
 
     let tipo = req.params.tipo;
     let id = req.params.id;
 
-    if (Object.keys(req.files).length == 0) {
+    if (!req.files) {
         return res.status(400)
             .json({
                 ok: false,
                 err: {
-                    message: 'No files were uploaded.'
+                    message: 'No se ha seleccionado ningún archivo'
                 }
             });
     }
 
-    // Validar tipo
+    // Valida tipo
     let tiposValidos = ['productos', 'usuarios'];
-
     if (tiposValidos.indexOf(tipo) < 0) {
         return res.status(400).json({
             ok: false,
-            message: 'Los tipos permitidos son ' + tiposValidos.join(', ')
+            err: {
+                message: 'Los tipos permitidas son ' + tiposValidos.join(', ')
+            }
         })
     }
 
@@ -46,27 +49,33 @@ app.put('/upload/:tipo/:id', function(req, res) {
     if (extensionesValidas.indexOf(extension) < 0) {
         return res.status(400).json({
             ok: false,
-            message: 'Las extensiones permitidas son ' + extensionesValidas.join(', '),
-            ext: extension
+            err: {
+                message: 'Las extensiones permitidas son ' + extensionesValidas.join(', '),
+                ext: extension
+            }
         })
     }
 
     // Cambiar nombre al archivo
-    let nombreArchivo = `${ id }-${ new Date().getMilliseconds() }.${ extension }`;
+    // 183912kuasidauso-123.jpg
+    let nombreArchivo = `${ id }-${ new Date().getMilliseconds()  }.${ extension }`;
+
 
     archivo.mv(`uploads/${ tipo }/${ nombreArchivo }`, (err) => {
+
         if (err)
             return res.status(500).json({
                 ok: false,
                 err
             });
 
-        // Aquí, imagen cargada
+        // Aqui, imagen cargada
         if (tipo === 'usuarios') {
             imagenUsuario(id, res, nombreArchivo);
         } else {
             imagenProducto(id, res, nombreArchivo);
         }
+
     });
 
 });
@@ -76,14 +85,12 @@ function imagenUsuario(id, res, nombreArchivo) {
     Usuario.findById(id, (err, usuarioDB) => {
 
         if (err) {
-
             borraArchivo(nombreArchivo, 'usuarios');
 
             return res.status(500).json({
                 ok: false,
                 err
             });
-
         }
 
         if (!usuarioDB) {
@@ -93,13 +100,12 @@ function imagenUsuario(id, res, nombreArchivo) {
             return res.status(400).json({
                 ok: false,
                 err: {
-                    message: 'Usuario no existe'
+                    message: 'Usuaro no existe'
                 }
             });
-
         }
 
-        borraArchivo(usuarioDB.img, 'usuarios');
+        borraArchivo(usuarioDB.img, 'usuarios')
 
         usuarioDB.img = nombreArchivo;
 
@@ -109,27 +115,29 @@ function imagenUsuario(id, res, nombreArchivo) {
                 ok: true,
                 usuario: usuarioGuardado,
                 img: nombreArchivo
-            })
+            });
 
         });
 
+
     });
 
+
 }
+
+
 
 function imagenProducto(id, res, nombreArchivo) {
 
     Producto.findById(id, (err, productoDB) => {
 
         if (err) {
-
             borraArchivo(nombreArchivo, 'productos');
 
             return res.status(500).json({
                 ok: false,
                 err
             });
-
         }
 
         if (!productoDB) {
@@ -139,13 +147,12 @@ function imagenProducto(id, res, nombreArchivo) {
             return res.status(400).json({
                 ok: false,
                 err: {
-                    message: 'producto no existe'
+                    message: 'Usuaro no existe'
                 }
             });
-
         }
 
-        borraArchivo(productoDB.img, 'productos');
+        borraArchivo(productoDB.img, 'productos')
 
         productoDB.img = nombreArchivo;
 
@@ -155,20 +162,26 @@ function imagenProducto(id, res, nombreArchivo) {
                 ok: true,
                 producto: productoGuardado,
                 img: nombreArchivo
-            })
+            });
 
         });
 
+
     });
+
 
 }
 
-function borraArchivo(nombreImagen, tipo) {
-    let pathImagen = path.resolve(__dirname, `../../uploads/${ tipo }/${ nombreImagen }`);
 
+
+function borraArchivo(nombreImagen, tipo) {
+
+    let pathImagen = path.resolve(__dirname, `../../uploads/${ tipo }/${ nombreImagen }`);
     if (fs.existsSync(pathImagen)) {
         fs.unlinkSync(pathImagen);
     }
+
+
 }
 
 module.exports = app;

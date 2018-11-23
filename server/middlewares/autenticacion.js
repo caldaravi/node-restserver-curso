@@ -49,7 +49,7 @@ let verificaAdmin_Role = (req, res, next) => {
 };
 
 // =====================
-// Verificar Token para imagen
+// Verifica token para imagen
 // =====================
 let verificaTokenImg = (req, res, next) => {
 
@@ -71,9 +71,8 @@ let verificaTokenImg = (req, res, next) => {
 
     });
 
+
 }
-
-
 
 module.exports = {
     verificaToken,
